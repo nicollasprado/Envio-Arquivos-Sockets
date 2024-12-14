@@ -50,7 +50,7 @@ public class Server {
         }
     }
 
-    public void addClientToMaps(Socket clientSocket){
+    private void addClientToMaps(Socket clientSocket){
         if(clientsById != null && clientsByHost != null){
             clientsById.put(clientId, clientSocket);
             clientsByHost.put(clientSocket.getInetAddress(), clientSocket);

@@ -30,57 +30,90 @@ class ConnectionHandler extends Thread{
     @Override
     public void run() {
         try{
-            InputStream msgReceived = clientSocket.getInputStream();
-            OutputStream msgSend = clientSocket.getOutputStream();
-            byte[] ipBuffer = new byte[512];
-            StringBuilder destinationSocketIp = new StringBuilder();
+            InputStream requesterReceivedMsg = clientSocket.getInputStream();
+            OutputStream requesterSendMsg = clientSocket.getOutputStream();
 
             while(clientSocket.isConnected()){
-                // Receives the file destination socket hostname
-                while(msgReceived.read(ipBuffer) != -1){
-                    destinationSocketIp.append(new String(ipBuffer, StandardCharsets.UTF_8));
-                }
+                String destinationSocketIp = receiveDestinationIp(requesterReceivedMsg);
                 // Send to the client 1 if found ip address and 0 if not
-                msgSend.write(checkIfDestinationIpIsConnected(destinationSocketIp.toString()));
-                msgSend.flush(); // Garants that the signal will be received immediately and the internal socket buffer will be cleared
+                byte[] foundIp = checkIfDestinationIpIsConnected(destinationSocketIp);
+                if(foundIp[0] == (byte) 0){ // not found
+                    requesterSendMsg.write(foundIp);
+                    requesterSendMsg.flush(); // Garants that the signal will be received immediately and the internal socket buffer will be cleared
+                }else{
+                    destinationSocket = clientsConnected.get(InetAddress.getByName(destinationSocketIp));
+                    InputStream destinationReceivedMsg = destinationSocket.getInputStream();
+                    OutputStream destinationSendMsg = destinationSocket.getOutputStream();
 
-                String downloadPath = "";
-                try{
-                    File downloadFile = new File(downloadPath);
-                }catch (NullPointerException e){
-                    throw new RuntimeException("Destino de arquivo invalido");
-                }
 
-                byte[] dataBuffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = msgReceived.read(dataBuffer)) != -1){
-                    Files.write(Path.of(downloadPath), dataBuffer, StandardOpenOption.TRUNCATE_EXISTING);
-                    System.out.println("Recebendo dados...");
+
+
+
+                    // CONTINUAR -> ENVIO DE REQUISIÇAO PARA O DESTINATARIO
+
+
+
+
+
+                    // Found ip
+                    requesterSendMsg.write(foundIp);
+                    requesterSendMsg.flush();
+
+                    int sendFileToDestination = receiveFileAndSendToDestination(requesterReceivedMsg, destinationSendMsg);
                 }
-                System.out.println("Arquivo recebido com sucesso!");
-                closeConnection();
             }
-        } catch (IOException e) {
+        }catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public byte[] checkIfDestinationIpIsConnected(String destinationSocketIp){
+    private void closeConnection() throws IOException {
+        clientsConnected.remove(clientSocket.getInetAddress());
+        clientSocket.close();
+    }
+
+
+
+    // Receives the file destination socket hostname
+    private String receiveDestinationIp(InputStream msgReceived){
+        byte[] buffer = new byte[4];
+
+        try{
+            msgReceived.read(buffer);
+            InetAddress ipAdress = InetAddress.getByAddress(buffer);
+            return ipAdress.getHostAddress();
+        } catch (IOException e) {
+            throw new RuntimeException("Endereço de destino invalido");
+        }
+    }
+
+
+    private byte[] checkIfDestinationIpIsConnected(String destinationSocketIp){
         // Send 1 to client if found the destination IP adress and 0 if not found
-        byte[] response = new byte[3];
+        byte[] response = new byte[1];
         try {
             if (clientsConnected.containsKey(InetAddress.getByName(destinationSocketIp))) {
-                response[2] = 1; // 001
+                response[0] = (byte) 1; // 1
             }
-            // returns 000 by default
+            // returns 0 by default
             return response;
         } catch (UnknownHostException e) {
             throw new RuntimeException("Endereço IP de destino invalido!");
         }
     }
 
-    public void closeConnection() throws IOException {
-        clientsConnected.remove(clientSocket.getInetAddress());
-        clientSocket.close();
+
+    private int receiveFileAndSendToDestination(InputStream requesterReceivedMsg, OutputStream destinationSendMsg){
+        byte[] receiveBuffer = new byte[4096];
+
+        try {
+            while (requesterReceivedMsg.read(receiveBuffer) != -1){
+                destinationSendMsg.write(receiveBuffer);
+            }
+            return 1;
+        }catch (IOException e){
+            throw new RuntimeException("Falha ao receber arquivo: " + e);
+        }
     }
+
 }
