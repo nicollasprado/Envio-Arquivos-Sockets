@@ -1,0 +1,15 @@
+All signals are in byte
+
+Server Signals:
+0 - Destination IP not found
+1 - Destination IP Found
+2 - Received client signal and ready to next phase
+3 - Server file transfer attempt
+50 - Error
+
+
+
+Client signals:
+10 - Send destination IP address to server check if it is connected;
+11 - Server file transfer request accepted
+12 - Server file transfer request deny
