@@ -1,4 +1,4 @@
-package com.nicollasprado.envioArquivos.Test;
+package com.nicollasprado.envioArquivos.Version2;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,9 +9,6 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
 
 @Getter
@@ -91,5 +88,16 @@ public class Client {
             throw new RuntimeException(e);
         }
     }
+
+
+
+
+    // CONTINUAR ESSAS FUNÇOES
+
+    public void sendFile(String destinationIp){
+
+    }
+
+    public void receiveFile(){}
 
 }

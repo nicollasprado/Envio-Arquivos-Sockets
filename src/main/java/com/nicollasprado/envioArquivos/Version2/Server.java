@@ -1,4 +1,4 @@
-package com.nicollasprado.envioArquivos.Test;
+package com.nicollasprado.envioArquivos.Version2;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
