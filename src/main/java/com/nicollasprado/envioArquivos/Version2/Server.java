@@ -24,12 +24,13 @@ public class Server {
             serverSocket = new ServerSocket(port, maxWaitingConnections, InetAddress.getByName(host));
             while (true) {
                 Socket client = serverSocket.accept();
-                new ConnectionHandler(client, clientsByHost).start(); // Thread creation
                 addClientToMaps(client);
+                new ConnectionHandler(client, clientsByHost).start(); // Thread creation
+                System.out.println(client.getInetAddress().getHostAddress() + " Conectado com sucesso ao servidor!");
 
                 Scanner terminalInput = new Scanner(System.in);
                 String terminalEntry = terminalInput.next();
-                if(terminalEntry.equals("exit")){
+                if(terminalEntry.equals("!exit")){
                     stop();
                 }
             }
